@@ -74,10 +74,17 @@ class LoginSerializer(serializers.Serializer):
         Perform credential validation via Django's authenticate().
         Returns the authenticated user instance or raises a validation error.
         """
-        # extract username from validated input
+        # extract username and password from validated input
         username = attrs.get('username')
-        # extract password from validated input
         password = attrs.get('password')
+        
+        # --- Pre-check: inactive user with correct password -> show specific message ---
+        # fetch user by username without raising (avoids user enumeration behavior change)
+        user_obj = User.objects.filter(username=username).first()  # get user or None
+        if user_obj is not None and not user_obj.is_active:        # if user exists but is inactive
+            if user_obj.check_password(password):                   # only when password is correct
+                # explicitly raise the "disabled" message expected by the test
+                raise serializers.ValidationError('User account is disabled.')
 
         # call Django's authenticate to verify credentials against the configured auth backend(s)
         user = authenticate(username=username, password=password)

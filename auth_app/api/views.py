@@ -127,7 +127,22 @@ class LoginView(APIView):
         except ValidationError as exc:
             # map serializer's 'Invalid credentials' to a standardized 401 AuthenticationFailed
             # extract detail string if present, else fall back
-            detail = exc.detail[0] if isinstance(exc.detail, list) and exc.detail else 'Invalid credentials.'
+            detail_obj = exc.detail
+            detail = 'Invalid credentials.'
+            # detail = exc.detail[0] if isinstance(exc.detail, list) and exc.detail else 'Invalid credentials.'
+            if isinstance(detail_obj, list) and detail_obj:
+                detail = str(detail_obj[0])
+            elif isinstance(detail_obj, dict):
+                # common DRF shape: {'non_field_errors': ['...']}
+                for v in detail_obj.values():
+                    if isinstance(v, list) and v:
+                        detail = str(v[0])
+                        break
+                    if isinstance(v, str):
+                        detail = v
+                        break
+            elif isinstance(detail_obj, str):
+                detail = detail_obj
             # raise DRF AuthenticationFailed to ensure a 401 status code
             return Response({'detail': detail}, status=status.HTTP_401_UNAUTHORIZED)
 
