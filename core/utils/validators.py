@@ -35,3 +35,21 @@ def validate_password_strength(password: str):
     if not re.search(SPECIAL_CHARACTER_REGEX, password):
         raise ValidationError(
             {"password": "At least one special character is required."})
+
+
+def validate_non_empty(value: str, field_name: str = 'field') -> str:
+    """Ensure a string field is non-empty and not just whitespace.
+
+    Args:
+    value (str): The string value to validate.
+    field_name (str): Name of the field, used in error messages.
+
+    Returns:
+    str: The trimmed value if valid.
+
+    Raises:
+    ValidationError: If the value is empty or only whitespace.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise ValidationError({field_name: f"{field_name.capitalize()} may not be blank."})
+    return value.strip()

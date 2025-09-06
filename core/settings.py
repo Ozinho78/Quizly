@@ -14,6 +14,7 @@ from pathlib import Path # Pfad-Objekte statt Strings
 import os  # für Pfadfunktionen
 import logging # Python-Logging
 from logging.handlers import RotatingFileHandler
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent      # vorhandenes BASE_DIR (→ Projekt-Root)
@@ -51,6 +52,12 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'core.utils.exceptions.exception_handler_status500',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
 }
 
 MIDDLEWARE = [
