@@ -87,19 +87,14 @@ class LoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('User account is disabled.')
 
         # call Django's authenticate to verify credentials against the configured auth backend(s)
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=username, password=password) # returns User or None
 
         # if authenticate() returns None, credentials are invalid
         if user is None:
             # raise a DRF ValidationError; the view will map this to a 401 response
             raise serializers.ValidationError('Invalid credentials.')
 
-        # if the user is inactive (optional check), disallow login
-        if not user.is_active:
-            # raise a DRF ValidationError for inactive users
-            raise serializers.ValidationError('User account is disabled.')
-
         # place the user object into the serializer context for easy access in the view
-        attrs['user'] = user
+        attrs['user'] = user # stash the authenticated user
         # return the attrs dict including the user
-        return attrs
+        return attrs # return validated data
