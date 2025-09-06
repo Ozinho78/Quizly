@@ -51,14 +51,26 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     'EXCEPTION_HANDLER': 'core.utils.exceptions.exception_handler_status500',
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # kurzer Access-Token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # längerer Refresh-Token
     'ROTATE_REFRESH_TOKENS': False,
 }
+
+# --- Cookie-Flags für JWT (kannst du zentral steuern) ---
+# JWT_COOKIE_SECURE = True          # in DEV evtl. False, in PROD unbedingt True
+JWT_COOKIE_SECURE = False           # für localhost um Cookies zu sehen
+JWT_COOKIE_SAMESITE = 'Lax'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
+JWT_ACCESS_COOKIE_NAME = 'access_token'
+JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

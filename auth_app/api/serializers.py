@@ -58,32 +58,41 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     
 class LoginSerializer(serializers.Serializer):
-    """Validate user login credentials and resolve the authenticated user instance.
-    This serializer enforces that both `username` and `password` are provided,
-    then authenticates against Django's auth backends. On success, it attaches
-    the authenticated `User` to `validated_data['user']` for the view layer.
     """
-    username = serializers.CharField() # plain text username provided by the client
-    password = serializers.CharField(write_only=True) # plain text password; never serialized back
+    Validate username/password for login.
+    
+    This serializer simply ensures the fields are present and authenticates the user.
+    It does not generate tokens; the view handles token creation so that cookie logic stays in the view.
+    """
+    # define username field as a required CharField
+    username = serializers.CharField(write_only=True, required=True)
+    # define password field as a required CharField
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
-    def validate_username(self, value: str) -> str:
-        """Validate that username is a non-empty string using shared validators."""
-        validate_non_empty(value, field_name='username') # call project validator
-        return value.strip() # return trimmed username
-
-    def validate_password(self, value: str) -> str:
-        """Validate that password is a non-empty string using shared validators."""
-        validate_non_empty(value, field_name='password') # call project validator
-        return value # return password unchanged (no trimming to avoid issues)
-
-    def validate(self, attrs: dict) -> dict:
-        """Perform authentication and attach the authenticated user on success.
-            If authentication fails, raise `AuthenticationFailed`, which DRF maps to HTTP 401.
+    def validate(self, attrs):
         """
-        username = attrs.get('username') # read raw username from input
-        password = attrs.get('password') # read raw password from input
-        user = authenticate(username=username, password=password) # try to authenticate via backends
-        if user is None: # no matching user + password
-            raise AuthenticationFailed('Invalid credentials.') # DRF-standard 401 error
-        attrs['user'] = user # attach the authenticated user for use in the view
-        return attrs # return the enriched, validated data
+        Perform credential validation via Django's authenticate().
+        Returns the authenticated user instance or raises a validation error.
+        """
+        # extract username from validated input
+        username = attrs.get('username')
+        # extract password from validated input
+        password = attrs.get('password')
+
+        # call Django's authenticate to verify credentials against the configured auth backend(s)
+        user = authenticate(username=username, password=password)
+
+        # if authenticate() returns None, credentials are invalid
+        if user is None:
+            # raise a DRF ValidationError; the view will map this to a 401 response
+            raise serializers.ValidationError('Invalid credentials.')
+
+        # if the user is inactive (optional check), disallow login
+        if not user.is_active:
+            # raise a DRF ValidationError for inactive users
+            raise serializers.ValidationError('User account is disabled.')
+
+        # place the user object into the serializer context for easy access in the view
+        attrs['user'] = user
+        # return the attrs dict including the user
+        return attrs
