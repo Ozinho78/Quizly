@@ -48,6 +48,10 @@ INSTALLED_APPS = [
     'main_app',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'exceptions.exception_handler_status500',
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',

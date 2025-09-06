@@ -9,13 +9,13 @@ SPECIAL_CHARACTER_REGEX = r"[!@#$%^&*(),.?\":{}|<>]"
 def validate_email_format(email: str):
     """Checks the email format"""
     if not re.match(EMAIL_REGEX, email):
-        raise ValidationError({"email": "Ungültige E-Mail-Adresse."})
+        raise ValidationError({"email": "Invalid E-Mail-Address."})
 
 
 def validate_email_unique(email: str):
     """Checks if email already exists"""
     if User.objects.filter(email__iexact=email).exists():
-        raise ValidationError({"email": "E-Mail-Adresse wird bereits verwendet."})
+        raise ValidationError({"email": "E-Mail-Address already in use."})
 
 
 def validate_password_strength(password: str):
