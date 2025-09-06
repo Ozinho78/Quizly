@@ -16,3 +16,5 @@ def exception_handler_status500(exc, context):
         return Response({'detail': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return response
+
+

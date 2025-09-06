@@ -44,12 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
     'auth_app',
     'main_app',
 ]
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'exceptions.exception_handler_status500',
+    'EXCEPTION_HANDLER': 'core.utils.exceptions.exception_handler_status500',
 }
 
 MIDDLEWARE = [

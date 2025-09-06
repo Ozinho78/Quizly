@@ -22,16 +22,16 @@ def validate_password_strength(password: str):
     """Checks the password strength"""
     if len(password) < 8:
         raise ValidationError(
-            {"password": "Passwort muss mindestens 8 Zeichen lang sein."})
+            {"password": "Password must be at least 8 characters long."})
     if not re.search(r"[A-Z]", password):
         raise ValidationError(
-            {"password": "Mindestens ein Großbuchstabe erforderlich."})
+            {"password": "At least one capital letter is required."})
     if not re.search(r"[a-z]", password):
         raise ValidationError(
-            {"password": "Mindestens ein Kleinbuchstabe erforderlich."})
+            {"password": "At least one lowercase letter is required."})
     if not re.search(r"\d", password):
         raise ValidationError(
-            {"password": "Mindestens eine Zahl erforderlich."})
+            {"password": "At least one number required."})
     if not re.search(SPECIAL_CHARACTER_REGEX, password):
         raise ValidationError(
-            {"password": "Mindestens ein Sonderzeichen erforderlich."})
+            {"password": "At least one special character is required."})

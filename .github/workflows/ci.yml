@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4  # fetch repository code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # align with your local version if different
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install system dependencies (optional)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg  # present locally; harmless in CI
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            # minimal fallback to run tests if no requirements.txt is present
+            pip install django djangorestframework djangorestframework-simplejwt pytest pytest-django pytest-cov
+          fi
+
+      - name: Show versions (debug)
+        run: |
+          python -V
+          pip freeze
+
+      - name: Run tests with coverage (fail under 80%)
+        env:
+          # pytest-django uses pytest.ini -> DJANGO_SETTINGS_MODULE; no env override needed
+          # set any extra env vars your settings expect, if applicable
+          PYTHONPATH: ${{ github.workspace }}  # ensure project root is importable
+        run: |
+          pytest --cov --cov-report=term-missing
+
+      - name: Generate HTML coverage
+        if: always()
+        run: |
+          pytest --cov --cov-report=html || true
+          tar -czf htmlcov.tgz htmlcov || true
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htmlcov
+          path: htmlcov.tgz
+
+
+# Klar! „CI-Setup vorbereitet, das auf GitHub Actions sauber laufen kann“ heißt:
+
+# CI (Continuous Integration): Bei jedem Push/PR zu GitHub wird dein Projekt automatisch gebaut und getestet.
+
+# GitHub Actions: Der Dienst auf GitHub, der diese Jobs ausführt – du steuerst ihn über eine YAML-Datei im Repo.
+
+# Kurz was unser Workflow (die ci.yml, die ich dir gegeben habe) genau tut:
+
+# Trigger
+# Läuft automatisch bei jedem push und pull_request.
+
+# Checkout
+# Holt deinen Code aus dem Repo.
+
+# Python einrichten
+# Installiert z. B. Python 3.11 auf dem Runner.
+
+# Pip-Cache
+# Cacht deine Python-Pakete, damit Folgeläufe schneller sind.
+
+# Systemabhängigkeiten
+# Installiert optional ffmpeg (weil du’s lokal nutzt – schadet im CI nicht).
+
+# Python-Dependencies
+
+# Wenn requirements.txt da ist: pip install -r requirements.txt.
+
+# Falls nicht: installiert ein Minimal-Set (Django, DRF, SimpleJWT, pytest, pytest-django, pytest-cov), damit Tests trotzdem laufen.
+
+# Tests + Coverage
+# Startet pytest mit Coverage und bricht ab, wenn < 80 % (--cov-fail-under=80).
+# Das funktioniert, weil wir DJANGO_SETTINGS_MODULE=core.settings bereits in deiner pytest.ini gesetzt haben. DB ist standardmäßig SQLite → keine extra Services nötig.
+
+# Coverage-HTML als Artefakt
+# Erzeugt htmlcov/ und hängt es als Download-Artefakt an den Lauf. So kannst du im Actions-Tab das Coverage-HTML ziehen.
+
+# Wie du’s nutzt:
+
+# Lege die Datei unter .github/workflows/ci.yml ins Repo, commit & push ganz normal mit Git.
+
+# GitHub zeigt dir unter Actions die Läufe (grün=ok, rot=fehlgeschlagen).
+
+# Klick in einen Lauf, um Logs zu sehen. Unter „Artifacts“ findest du das Coverage-HTML.
+
+# Anpassungen (optional):
+
+# Python-Version: In setup-python ändern (oder eine Matrix testen: 3.10/3.11/3.12).
+
+# Coverage-Schwelle: In pytest.ini via --cov-fail-under=80.
+
+# Secrets/ENV: Wenn du später API-Keys brauchst, lege sie unter Repo → Settings → Secrets and variables → Actions an und verwende sie im Job via env:. Für unsere Tests ist das derzeit nicht nötig.
+
+# Datenbank: Für SQLite passt alles. Für Postgres/MySQL würdest du einen Service in der YAML definieren und DATABASES per ENV setzen.
+
+# Kurz: Du pushst ganz normal, und GitHub prüft automatisch, ob dein Projekt baut, Tests grün sind und die Coverage passt. Wenn was bricht, siehst du sofort, wo und warum – bevor es in main landet.

@@ -96,9 +96,6 @@ logs/*
 .pytest_cache/
 
 helper/
-auth_app/api/tests/*
-coderr_app/api/tests/*
-coderr_app/management/commands/*
 pytest.ini
 
 **/tests/
