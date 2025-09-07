@@ -125,26 +125,27 @@ class LoginView(APIView):
             return resp
 
         except ValidationError as exc:
-            # map serializer's 'Invalid credentials' to a standardized 401 AuthenticationFailed
-            # extract detail string if present, else fall back
+            # --- robust error extraction (list, dict, str) ---
             detail_obj = exc.detail
-            detail = 'Invalid credentials.'
-            # detail = exc.detail[0] if isinstance(exc.detail, list) and exc.detail else 'Invalid credentials.'
+
+            # list: take first item and return immediately
             if isinstance(detail_obj, list) and detail_obj:
-                detail = str(detail_obj[0])
-            elif isinstance(detail_obj, dict):
-                # common DRF shape: {'non_field_errors': ['...']}
+                return Response({'detail': str(detail_obj[0])}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # dict: iterate values; on first match (list or str) return immediately
+            if isinstance(detail_obj, dict):
                 for v in detail_obj.values():
                     if isinstance(v, list) and v:
-                        detail = str(v[0])
-                        break
+                        return Response({'detail': str(v[0])}, status=status.HTTP_401_UNAUTHORIZED)
                     if isinstance(v, str):
-                        detail = v
-                        break
-            elif isinstance(detail_obj, str):
-                detail = detail_obj
-            # raise DRF AuthenticationFailed to ensure a 401 status code
-            return Response({'detail': detail}, status=status.HTTP_401_UNAUTHORIZED)
+                        return Response({'detail': v}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # str: return as-is
+            if isinstance(detail_obj, str):
+                return Response({'detail': detail_obj}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # fallback
+            return Response({'detail': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception as exc:
             # for any other unexpected error, return a 500 with generic detail

@@ -97,6 +97,8 @@ logs/*
 
 helper/
 pytest.ini
+.coverage
+.coveragerc.ini
 
 **/tests/
 *.ini
