@@ -15,9 +15,12 @@ import os  # für Pfadfunktionen
 import logging # Python-Logging
 from logging.handlers import RotatingFileHandler
 from datetime import timedelta
+from dotenv import load_dotenv, find_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent      # vorhandenes BASE_DIR (→ Projekt-Root)
+# load_dotenv(BASE_DIR / '.env')                         # lade Umgebungsvariablen aus .env-Datei
+load_dotenv(find_dotenv())
 LOG_DIR = BASE_DIR / 'logs'                            # logs/ direkt im Projekt-Root
 LOG_DIR.mkdir(exist_ok=True)                           # Ordner anlegen, falls nicht vorhanden
 
