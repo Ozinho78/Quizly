@@ -4,10 +4,8 @@ import subprocess # invoke ffmpeg/yt-dlp CLIs
 from pathlib import Path # path utils
 from typing import List, Dict # type hints
 
-
 # Whisper (openai-whisper) model loader
 import whisper # local speech-to-text
-
 
 # Gemini (google-generativeai) SDK
 try:
@@ -28,7 +26,6 @@ def download_audio_from_youtube(url: str, workdir: Path) -> Path:
     """
     # ensure workdir exists
     workdir.mkdir(parents=True, exist_ok=True) # create folder if needed
-
 
     # choose an output file template for yt-dlp (we want an m4a or bestaudio)
     m4a_path = workdir / 'audio.m4a' # intermediate container
@@ -107,7 +104,6 @@ def generate_quiz_with_gemini(transcript: str) -> Dict[str, List[Dict[str, str]]
         'question_title, options (list of 4 strings), and answer (one of options). No extra text.'
     )
 
-
     # Call the model with a JSON-friendly response
     response = model.generate_content([
         system_prompt, # instruction
@@ -116,7 +112,6 @@ def generate_quiz_with_gemini(transcript: str) -> Dict[str, List[Dict[str, str]]
 
     # Extract text; Gemini often returns JSON as a code block → best-effort parse
     text = response.text or '' # get raw model text
-
 
     import json, re # parse helpers
     # Try to find a JSON block in the response

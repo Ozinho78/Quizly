@@ -9,7 +9,6 @@ from core.utils.validators import (
     validate_non_empty,
 )
 
-
 class RegisterSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration.

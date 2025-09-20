@@ -1,20 +1,14 @@
 from django.conf import settings # access settings (cookie names) if needed
+import tempfile # for safe temp dirs/files
 from rest_framework.views import APIView # DRF base class
 from rest_framework.response import Response # HTTP responses
 from rest_framework import status # HTTP codes
 from rest_framework.permissions import IsAuthenticated # gate by auth
 from rest_framework_simplejwt.authentication import JWTAuthentication # default JWT auth
-
-
 from main_app.api.serializers import QuizCreateSerializer, QuizSerializer # our serializers
 from main_app.models import Quiz, Question # ORM models
-from main_app.services.pipeline import ( # pipeline steps
-    download_audio_from_youtube,
-    transcribe_audio_with_whisper,
-    generate_quiz_with_gemini,
-    QuizPipelineError,
-)
-
+from main_app.services import pipeline
+from main_app.services.pipeline import QuizPipelineError
 
 class CookieJWTAuthentication(JWTAuthentication):
     """
@@ -60,13 +54,13 @@ class CreateQuizView(APIView):
                 workdir = Path(tmpdir) # Path object for convenience
 
                 # 1) Download and convert audio
-                wav_path = download_audio_from_youtube(url, workdir) # get 16k mono wav
+                wav_path = pipeline.download_audio_from_youtube(url, workdir) # get 16k mono wav
 
                 # 2) Transcribe with Whisper
-                transcript = transcribe_audio_with_whisper(wav_path) # extract spoken text
+                transcript = pipeline.transcribe_audio_with_whisper(wav_path) # extract spoken text
 
                 # 3) Create questions via Gemini
-                quiz_payload = generate_quiz_with_gemini(transcript) # returns dict structure
+                quiz_payload = pipeline.generate_quiz_with_gemini(transcript) # returns dict structure
 
                 # 4) Persist models
                 quiz = Quiz.objects.create( # create the quiz row
