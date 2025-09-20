@@ -135,8 +135,6 @@ def download_audio_from_youtube(url: str, workdir: Path) -> Path:
 def transcribe_audio_with_whisper(wav_path: Path, model_name: str = 'base') -> str:
     """
     Transcribe the given WAV file using a local Whisper model.
-
-
     You can tweak model_name to 'small' or 'medium' if available.
     """
     model = whisper.load_model(model_name) # load the requested Whisper model
@@ -230,66 +228,3 @@ def _parse_json_loose(text: str) -> dict:
         except Exception:
             e = text.rfind('}', 0, e)
     raise QuizPipelineError('Gemini returned unexpected format (no JSON).')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def generate_quiz_with_gemini(transcript: str) -> Dict[str, List[Dict[str, str]]]:
-#     """
-#     Ask Gemini 1.5 Flash to write 10 multiple-choice questions from the transcript.
-#     Returns a dict with shape: {
-#     'title': str,
-#     'description': str,
-#     'questions': [ {'question_title': str, 'options': [str, str, str, str], 'answer': str}, ...]
-#     }
-#     """
-#     _ensure_genai_configured() # validate client
-#     model = genai.GenerativeModel('gemini-1.5-flash') # select fast, cost-effective model
-
-#     # Prompt engineered to ensure structure; asks for strict JSON
-#     system_prompt = (
-#         'You are a quiz generator. Create exactly 10 multiple-choice questions (4 options each)\n'
-#         'based ONLY on the provided transcript. Include a short title and description.\n'
-#         'Return STRICT JSON with keys: title, description, questions. Each question must have\n'
-#         'question_title, options (list of 4 strings), and answer (one of options). No extra text.'
-#     )
-
-#     # Call the model with a JSON-friendly response
-#     response = model.generate_content([
-#         system_prompt, # instruction
-#         transcript[:15000], # cap tokens for long videos (simple guard)
-#     ])
-
-#     # Extract text; Gemini often returns JSON as a code block → best-effort parse
-#     text = response.text or '' # get raw model text
-
-#     import json, re # parse helpers
-#     # Try to find a JSON block in the response
-#     match = re.search(r'\{[\s\S]*\}$', text.strip()) # naive JSON capture from first '{' to end
-#     if not match:
-#         raise QuizPipelineError('Gemini returned unexpected format (no JSON).') # guard format
-
-#     payload = json.loads(match.group(0)) # parse JSON string
-
-
-#     # Basic shape validation
-#     if 'questions' not in payload or len(payload['questions']) != 10:
-#         raise QuizPipelineError('Model did not produce exactly 10 questions.') # enforce count
-#     for q in payload['questions']:
-#         opts = q.get('options', []) # retrieve options list
-#         if len(opts) != 4:
-#             raise QuizPipelineError('Each question must have 4 options.') # enforce cardinality
-#         if q.get('answer') not in opts:
-#             raise QuizPipelineError('Answer must be one of the options.') # enforce consistency
-
-#     return payload # structured quiz content
