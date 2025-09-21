@@ -3,7 +3,7 @@ import tempfile # for safe temp dirs/files
 from rest_framework.views import APIView # DRF base class
 from rest_framework.response import Response # HTTP responses
 from rest_framework import status # HTTP codes
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView # generic views
 from rest_framework.permissions import IsAuthenticated # gate by auth
 from rest_framework_simplejwt.authentication import JWTAuthentication # default JWT auth
 from main_app.api.serializers import QuizCreateSerializer, QuizSerializer # our serializers
@@ -121,3 +121,41 @@ class QuizListView(ListAPIView):
         """
         # self.request.user is guaranteed by IsAuthenticated
         return Quiz.objects.filter(user=self.request.user).prefetch_related('questions')
+    
+    
+class QuizDetailView(RetrieveAPIView):
+    """
+    GET /api/quizzes/{id}
+    Returns a specific quiz of the authenticated user including all questions.
+    Permissions:
+      - Authenticated via JWT in HttpOnly cookies.
+      - User can only access their own quizzes.
+    Responses:
+      - 200: Quiz with nested questions.
+      - 401: Not authenticated.
+      - 403: Quiz belongs to another user.
+      - 404: Quiz not found.
+      - 500: Internal server error.
+    """
+    authentication_classes = [CookieJWTAuthentication]  # read JWT from cookie
+    permission_classes = [IsAuthenticated]              # require login
+    serializer_class = QuizSerializer                   # nested questions included
+    queryset = Quiz.objects.all().prefetch_related('questions')  # base queryset
+
+    def get_object(self):
+        """
+        Restrict lookup to the requesting user.  
+        Raises 403 if the quiz exists but belongs to another user.
+        """
+        from rest_framework.exceptions import PermissionDenied, NotFound
+
+        quiz_id = self.kwargs.get('pk')  # quiz id from URL
+        try:
+            quiz = Quiz.objects.prefetch_related('questions').get(pk=quiz_id)
+        except Quiz.DoesNotExist:
+            raise NotFound('Quiz not found.')
+
+        if quiz.user != self.request.user:
+            raise PermissionDenied('You do not have permission to access this quiz.')
+
+        return quiz
