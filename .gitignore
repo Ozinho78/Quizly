@@ -100,7 +100,8 @@ pytest.ini
 .coverage
 .coveragerc.ini
 
-**/tests/
+# **/tests/
+main_app/tests/*
 *.ini
 **/media/
 **/management/
