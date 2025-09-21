@@ -6,7 +6,7 @@ from rest_framework import status # HTTP codes
 from rest_framework.generics import ListAPIView, RetrieveAPIView # generic views
 from rest_framework.permissions import IsAuthenticated # gate by auth
 from rest_framework_simplejwt.authentication import JWTAuthentication # default JWT auth
-from main_app.api.serializers import QuizCreateSerializer, QuizSerializer # our serializers
+from main_app.api.serializers import QuizCreateSerializer, QuizSerializer, QuizPartialUpdateSerializer  # our serializers
 from main_app.models import Quiz, Question # ORM models
 from main_app.services import pipeline
 from main_app.services.pipeline import QuizPipelineError
@@ -14,8 +14,6 @@ from main_app.services.pipeline import QuizPipelineError
 class CookieJWTAuthentication(JWTAuthentication):
     """
     Simple JWT auth class that reads the access token from an HttpOnly cookie.
-
-
     This allows the frontend to authenticate without Authorization headers.
     """
     def authenticate(self, request): # override to read from cookie
@@ -159,3 +157,40 @@ class QuizDetailView(RetrieveAPIView):
             raise PermissionDenied('You do not have permission to access this quiz.')
 
         return quiz
+    
+    def patch(self, request, *args, **kwargs):
+        """
+        PATCH /api/quizzes/{id}/
+        Partially update allowed fields ('title', 'description') of a quiz
+        owned by the authenticated user, then return the full quiz payload.
+
+        Responses:
+          - 200: Quiz successfully updated (full serialized quiz returned).
+          - 400: Invalid request data (e.g., unknown fields or validation errors).
+          - 401: Not authenticated.
+          - 403: Quiz belongs to another user.
+          - 404: Quiz not found.
+          - 500: Internal server error (handled by DRF or outer middleware).
+        """
+        # Resolve the quiz instance while enforcing ownership (may raise 403/404).
+        quiz = self.get_object()
+
+        # Bind incoming data to a write-serializer for partial update.
+        serializer = QuizPartialUpdateSerializer(
+            instance=quiz,          # the DB object we are updating
+            data=request.data,      # incoming partial fields
+            partial=True            # allow omitting fields (PATCH semantics)
+        )
+
+        # Validate input; on error we return 400 with details.
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Persist the changes to the database.
+        serializer.save()  # updates only the provided fields
+
+        # Refresh from DB to ensure we serialize the latest state (timestamps updated).
+        quiz.refresh_from_db()
+
+        # Return the full quiz representation including nested questions.
+        return Response(QuizSerializer(quiz).data, status=status.HTTP_200_OK)

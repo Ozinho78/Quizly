@@ -77,3 +77,38 @@ class QuizCreateSerializer(serializers.Serializer):
 
         # 5) Everything else is rejected.
         raise serializers.ValidationError('Only YouTube URLs are allowed.')
+    
+    
+class QuizPartialUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer used for PATCH updates on a Quiz.
+    Only allows partial modification of 'title' and 'description'.
+    It deliberately excludes immutable/generated fields like:
+      - 'video_url' (source-of-truth of the quiz content),
+      - timestamps,
+      - nested 'questions'.
+    """
+    class Meta:
+        model = Quiz  # link to the Quiz ORM model
+        fields = ('title', 'description')  # writable subset only
+        # Make both fields optional to support partial updates
+        extra_kwargs = {
+            'title': {'required': False},        # not required for PATCH
+            'description': {'required': False},  # not required for PATCH
+        }
+
+    def validate_title(self, value: str) -> str:
+        """
+        Basic sanity validation for 'title' length.
+        """
+        # Ensure we handle None gracefully (field may be omitted)
+        if value is None:
+            return value  # nothing to validate when omitted
+        # Strip whitespace to avoid accidental blank titles
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError('Title must not be empty when provided.')
+        # Keep length within model's CharField capacity
+        if len(value) > 255:
+            raise serializers.ValidationError('Title must be at most 255 characters.')
+        return value
