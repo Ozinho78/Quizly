@@ -99,73 +99,27 @@ class QuizDetailView(RetrieveAPIView):
         return quiz
     
     def patch(self, request, *args, **kwargs):
-        """
-        PATCH /api/quizzes/{id}/
-        Partially update allowed fields ('title', 'description') of a quiz owned by the authenticated user.
-
-        Returns:
-          200: Updated quiz with full details (including nested questions).
-          400: Invalid request data or unknown fields.
-          401: Not authenticated.
-          403: Forbidden (quiz belongs to someone else).
-          404: Quiz not found.
-        """
-        # Resolve the target quiz or raise 404/403 based on ownership.
-        quiz = self.get_object()  # enforces ownership in get_object()
-
-        # Define a strict whitelist of fields allowed to be changed via PATCH.
-        allowed_fields = {'title', 'description'}  # only these keys are legal
-
-        # Compute any keys in the incoming payload that are not allowed.
-        unknown = set(request.data.keys()) - allowed_fields  # detect foreign keys
-
-        # If we found unknown keys, reject early with a 400 to satisfy the contract & tests.
+        """Partially updates allowed fields ('title', 'description') of a quiz owned by the authenticated user"""
+        quiz = self.get_object()
+        allowed_fields = {'title', 'description'}
+        unknown = set(request.data.keys()) - allowed_fields
         if unknown:
-            # Build a human-readable message listing the offending fields.
             detail = f'Unknown field(s): {", ".join(sorted(unknown))}'
-            return Response({'detail': detail}, status=status.HTTP_400_BAD_REQUEST)  # fail fast
-
-        # Bind the incoming partial data to the dedicated write-serializer.
+            return Response({'detail': detail}, status=status.HTTP_400_BAD_REQUEST)
         serializer = QuizPartialUpdateSerializer(
-            instance=quiz,      # model instance to update
-            data=request.data,  # partial payload with allowed keys
-            partial=True        # PATCH semantics (fields optional)
+            instance=quiz,
+            data=request.data,
+            partial=True
         )
-
-        # Validate and return 400 with errors if invalid.
-        if not serializer.is_valid():  # run field-level & object-level checks
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # invalid data
-
-        # Persist changes to DB.
-        serializer.save()  # updates only provided fields
-
-        # Refresh instance to capture updated timestamps (updated_at) before serializing.
-        quiz.refresh_from_db()  # ensure latest state
-
-        # Serialize the full quiz (read-only serializer) including nested questions.
-        output = QuizSerializer(quiz).data  # full response shape
-
-        # Return the updated resource.
-        return Response(output, status=status.HTTP_200_OK)  # success
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        quiz.refresh_from_db()
+        output = QuizSerializer(quiz).data
+        return Response(output, status=status.HTTP_200_OK)
     
     def delete(self, request, *args, **kwargs):
-        """
-        DELETE /api/quizzes/{id}/
-        Permanently delete a quiz owned by the authenticated user (including all related questions).
-
-        Returns:
-          - 204: Quiz successfully deleted (no response body).
-          - 401: Not authenticated.
-          - 403: Forbidden (quiz belongs to someone else).
-          - 404: Quiz not found.
-        Warning:
-          This operation is permanent and cannot be undone.
-        """
-        # Load the quiz instance or raise 404; ownership checks should happen in get_object()
-        quiz = self.get_object()  # retrieves the quiz instance for the current user or raises PermissionDenied/NotFound
-
-        # Perform the deletion; related Question rows will be removed via FK cascade if defined on the model
-        quiz.delete()  # delete the quiz record from the database
-
-        # Return 204 No Content to indicate success with no response body
-        return Response(status=status.HTTP_204_NO_CONTENT)  # comply with spec: null body on success
+        """Permanently deletes a quiz owned by the authenticated user"""
+        quiz = self.get_object()
+        quiz.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
