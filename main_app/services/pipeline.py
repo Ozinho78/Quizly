@@ -165,7 +165,14 @@ def generate_quiz_with_gemini(transcript: str) -> Dict[str, List[Dict[str, str]]
         'response_mime_type': 'application/json',  # <- wichtig
         'temperature': 0.3,  # etwas deterministischer
     }
-    model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
+    # model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
+    # In Tests kann ein FakeModel ohne generation_config-Parameter verwendet werden.
+    # Dann fällt der Aufruf mit TypeError — in dem Fall ohne Zusatz-Config instanziieren.
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
+    except TypeError:
+        # Fallback für gemockte/ältere Clients
+        model = genai.GenerativeModel('gemini-1.5-flash')
 
     system_prompt = (
         'You are a quiz generator. Create exactly 10 multiple-choice questions (4 options each)\n'
