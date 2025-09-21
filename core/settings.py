@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-wr7nuq$nkp)br90q%%j7i2b6n^6hz=07&&)u0u83t=_ok^2j$t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -208,10 +208,21 @@ LOGGING = {
 }
 
 
-# CORS Einstellungen
-CORS_ALLOW_ALL_ORIGINS = True   # erlaubt alle Domains (für Entwicklung praktisch)
-# oder spezifisch:
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+]
+
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'http://127.0.0.1:8000',   # optional
+    'http://localhost:8000',   # optional
+]
+CORS_ALLOW_CREDENTIALS = True
+# (Optional) Falls du spezielle Header brauchst:
+# CORS_ALLOW_HEADERS = list(default_headers) + ['X-CSRFToken']
+# CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
