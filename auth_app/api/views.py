@@ -157,42 +157,30 @@ class TokenRefreshView(APIView):
                     status=status.HTTP_401_UNAUTHORIZED
                 )
             try:
-                refresh_obj = RefreshToken(refresh_token)  # may raise TokenError if malformed/expired
-                new_access = refresh_obj.access_token      # create a fresh access token bound to same user
-            except TokenError:  # invalid/expired/bad signature
-                return Response(  # respond with 401 according to spec
-                    {'detail': 'Invalid refresh token.'},  # clear message
+                refresh_obj = RefreshToken(refresh_token)
+                new_access = refresh_obj.access_token
+            except TokenError:
+                return Response(
+                    {'detail': 'Invalid refresh token.'},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
-
-            # Determine cookie lifetime for the access cookie from SIMPLE_JWT (fallback 5 minutes).
-            access_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME')  # timedelta or None
-            access_max_age = int(access_lifetime.total_seconds()) if access_lifetime else 300   # seconds for cookie
-
-            # Prepare success payload including the access token string.
-            body = {  # response body matching your contract
+            access_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME')
+            access_max_age = int(access_lifetime.total_seconds()) if access_lifetime else 300
+            body = {
                 'detail': 'Token refreshed',
-                'access': str(new_access),  # string version of the token
+                'access': str(new_access),
             }
-
-            # Build the response with HTTP 200.
-            resp = Response(body, status=status.HTTP_200_OK)  # success response
-
-            # Set/overwrite the 'access_token' cookie with the fresh token.
-            resp.set_cookie(                  # write the cookie to the client
-                key=access_cookie_name,       # cookie name
-                value=str(new_access),        # jwt string
-                max_age=access_max_age,       # seconds
-                secure=cookie_secure,         # HTTPS-only in prod
-                httponly=True,                # HttpOnly requirement
-                samesite=cookie_samesite,     # samesite policy
-                path='/',                     # cookie applies to all paths
+            resp = Response(body, status=status.HTTP_200_OK)
+            resp.set_cookie(
+                key=access_cookie_name,
+                value=str(new_access),
+                max_age=access_max_age,
+                secure=cookie_secure,
+                httponly=True,
+                samesite=cookie_samesite,
+                path='/',
             )
-
-            # Done.
-            return resp  # send response with new access cookie
-
+            return resp
         except Exception:
-            # Any unexpected error becomes a 500 per your spec (you also have a global handler set).
             return Response({'detail': 'Internal server error.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
