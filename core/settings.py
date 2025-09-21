@@ -10,19 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path # Pfad-Objekte statt Strings
-import os  # für Pfadfunktionen
-import logging # Python-Logging
+from pathlib import Path
+import os
+import logging
 from logging.handlers import RotatingFileHandler
 from datetime import timedelta
 from dotenv import load_dotenv, find_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent      # vorhandenes BASE_DIR (→ Projekt-Root)
-# load_dotenv(BASE_DIR / '.env')                         # lade Umgebungsvariablen aus .env-Datei
+BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(find_dotenv())
-LOG_DIR = BASE_DIR / 'logs'                            # logs/ direkt im Projekt-Root
-LOG_DIR.mkdir(exist_ok=True)                           # Ordner anlegen, falls nicht vorhanden
+LOG_DIR = BASE_DIR / 'logs'                      
+LOG_DIR.mkdir(exist_ok=True)                     
 
 
 # Quick-start development settings - unsuitable for production
@@ -34,11 +33,7 @@ SECRET_KEY = 'django-insecure-wr7nuq$nkp)br90q%%j7i2b6n^6hz=07&&)u0u83t=_ok^2j$t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -56,26 +51,16 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'core.utils.authentication.CookieJWTAuthentication',
     ),
-    # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     'EXCEPTION_HANDLER': 'core.utils.exceptions.exception_handler_status500',
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # kurzer Access-Token
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # längerer Refresh-Token
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
 }
-
-# --- Cookie-Flags für JWT (kannst du zentral steuern) ---
-# # JWT_COOKIE_SECURE = True          # in DEV evtl. False, in PROD unbedingt True
-# JWT_COOKIE_SECURE = False           # für localhost um Cookies zu sehen
-# JWT_COOKIE_SAMESITE = 'None'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
-# JWT_ACCESS_COOKIE_NAME = 'access_token'
-# JWT_REFRESH_COOKIE_NAME = 'refresh_token'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -141,24 +126,18 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -170,7 +149,7 @@ MEDIA_URL = '/media/'
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,                 # bestehende Logger nicht abschalten
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d %(message)s',
@@ -181,9 +160,9 @@ LOGGING = {
         'app_file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOG_DIR / 'django.log'),  # → <projekt-root>/logs/django.log
-            'maxBytes': 5 * 1024 * 1024,              # 5 MB pro Datei
-            'backupCount': 5,                          # bis zu 5 Rotationen
+            'filename': str(LOG_DIR / 'django.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
             'encoding': 'utf-8',
             'formatter': 'verbose',
         },
@@ -198,45 +177,16 @@ LOGGING = {
         },
     },
     'loggers': {
-        # alle App-Logs (root)
         '': {'handlers': ['app_file'], 'level': 'INFO', 'propagate': False},
-        # Django-Core
         'django': {'handlers': ['app_file'], 'level': 'INFO', 'propagate': True},
         'django.request': {'handlers': ['request_file'], 'level': 'INFO', 'propagate': False},
         'django.db.backends': {'handlers': ['app_file'], 'level': 'WARNING', 'propagate': False},
-        # optional: DRF
         'rest_framework': {'handlers': ['app_file'], 'level': 'INFO', 'propagate': False},
     }
 }
 
-
-# CSRF_TRUSTED_ORIGINS = [
-#     'http://127.0.0.1:5500',
-#     'http://localhost:5500',
-# ]
-
-
-# # CORS
-# CORS_ALLOW_ALL_ORIGINS = False
-# CORS_ALLOWED_ORIGINS = [
-#     'http://127.0.0.1:5500',
-#     'http://localhost:5500',
-#     # 'http://127.0.0.1:8000',   # optional
-#     # 'http://localhost:8000',   # optional
-# ]
-# CORS_ALLOW_CREDENTIALS = True
-# # (Optional) Falls du spezielle Header brauchst:
-# # CORS_ALLOW_HEADERS = list(default_headers) + ['X-CSRFToken']
-# # CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-# CSRF_COOKIE_SAMESITE = 'None'
-# CSRF_COOKIE_SECURE = False
-# SESSION_COOKIE_SAMESITE = 'None'
-# SESSION_COOKIE_SECURE = False
-
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
-# CORS nur für dein Frontend erlauben + Credentials an
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5500',
@@ -244,12 +194,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF-Trusted (für Cookies + POSTs)
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5500',
     'http://localhost:5500',
 ]
 
-# Cookies cross-site erlauben
-JWT_COOKIE_SAMESITE = 'Lax'   # 'Lax' oder 'None'
-JWT_COOKIE_SECURE = False      # lokal ohne HTTPS (in Prod: True)
+JWT_COOKIE_SAMESITE = 'Lax'
+JWT_COOKIE_SECURE = False

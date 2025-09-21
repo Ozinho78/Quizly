@@ -21,6 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls), # admin site
     path('api/', include('auth_app.api.urls')), 
     path('api/', include('main_app.api.urls')),
-    path('api-auth/', include('rest_framework.urls')), # ← Login/Logout für die Browsable API
-
+    path('api-auth/', include('rest_framework.urls')),
 ]

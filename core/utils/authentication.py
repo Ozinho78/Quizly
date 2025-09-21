@@ -4,10 +4,8 @@ from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class CookieJWTAuthentication(JWTAuthentication):
-    """
-    Authenticate using the JWT access token stored in an HttpOnly cookie.
-    Falls back to Authorization header if absent.
-    """
+    """Authenticates using the JWT access token stored in an HttpOnly cookie. Falls back to Authorization header if absent"""
+    
     def authenticate(self, request: Request) -> Optional[Tuple[object, str]]:
         cookie_name = getattr(settings, 'JWT_ACCESS_COOKIE_NAME', 'access_token')
         raw = request.COOKIES.get(cookie_name)

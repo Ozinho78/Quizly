@@ -1,10 +1,7 @@
 from django.conf import settings
 
 class CookieToAuthorizationMiddleware:
-    """
-    Mirror 'access_token' cookie into 'Authorization: Bearer ...' if header is missing.
-    Keeps HttpOnly (läuft nur serverseitig).
-    """
+    """Mirrors 'access_token' cookie into 'Authorization: Bearer ...' if header is missing"""
     def __init__(self, get_response):
         self.get_response = get_response
 
