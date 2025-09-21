@@ -251,5 +251,5 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Cookies cross-site erlauben
-JWT_COOKIE_SAMESITE = 'Lax'   # <- war 'Lax'
+JWT_COOKIE_SAMESITE = 'Lax'   # 'Lax' oder 'None'
 JWT_COOKIE_SECURE = False      # lokal ohne HTTPS (in Prod: True)
