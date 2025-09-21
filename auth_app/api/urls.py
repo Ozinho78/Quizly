@@ -1,3 +1,4 @@
+"""Contains all necessary URLs for the auth_app API"""
 from django.urls import path
 from auth_app.api.views import RegisterView, LoginView, LogoutView, TokenRefreshView
 
@@ -8,7 +9,3 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='api-logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='api-token-refresh'),
 ]
-
-
-from auth_app.api.views import MeView
-urlpatterns += [ path('me/', MeView.as_view(), name='api-me') ]
