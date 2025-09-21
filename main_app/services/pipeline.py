@@ -142,8 +142,15 @@ def generate_quiz_with_gemini(transcript: str) -> Dict[str, List[Dict[str, str]]
         'Return STRICT JSON with keys: title, description, questions. Each question must have\n'
         'question_title, options (list of 4 strings), and answer (one of options). No extra text.'
     )
+    
+    system_prompt_german = (
+        'Du bist ein Quiz-Generator. Erstelle genau 10 Multiple-Choice-Fragen (je 4 Antwortmöglichkeiten)\n'
+        'basierend AUSSCHLIESSLICH auf dem bereitgestellten Transkript. Füge einen kurzen Titel und eine Beschreibung hinzu.\n'
+        'Gib STRIKTES JSON mit den Schlüsseln title, description, questions zurück. Jede Frage muss\n'
+        'question_title, options (Liste von 4 Strings) und answer (eine der Optionen) enthalten. Kein zusätzlicher Text.'
+    )
 
-    response = model.generate_content([system_prompt, transcript[:15000]])
+    response = model.generate_content([system_prompt_german, transcript[:15000]])
     import logging
     logger = logging.getLogger(__name__)
     logger.info('Gemini raw (first 600 chars): %s', (response.text or '')[:600])
