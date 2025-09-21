@@ -1,3 +1,4 @@
+"""Contains URL patterns for the API endpoints"""
 from django.urls import path
 from main_app.api.views import CreateQuizView, QuizListView, QuizDetailView
 
