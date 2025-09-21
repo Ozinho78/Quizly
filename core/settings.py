@@ -71,7 +71,7 @@ SIMPLE_JWT = {
 # --- Cookie-Flags für JWT (kannst du zentral steuern) ---
 # JWT_COOKIE_SECURE = True          # in DEV evtl. False, in PROD unbedingt True
 JWT_COOKIE_SECURE = False           # für localhost um Cookies zu sehen
-JWT_COOKIE_SAMESITE = 'Lax'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
+JWT_COOKIE_SAMESITE = 'None'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
 JWT_ACCESS_COOKIE_NAME = 'access_token'
 JWT_REFRESH_COOKIE_NAME = 'refresh_token'
 
@@ -226,3 +226,8 @@ CORS_ALLOW_CREDENTIALS = True
 # (Optional) Falls du spezielle Header brauchst:
 # CORS_ALLOW_HEADERS = list(default_headers) + ['X-CSRFToken']
 # CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = False
