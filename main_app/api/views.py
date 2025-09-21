@@ -3,6 +3,7 @@ import tempfile # for safe temp dirs/files
 from rest_framework.views import APIView # DRF base class
 from rest_framework.response import Response # HTTP responses
 from rest_framework import status # HTTP codes
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated # gate by auth
 from rest_framework_simplejwt.authentication import JWTAuthentication # default JWT auth
 from main_app.api.serializers import QuizCreateSerializer, QuizSerializer # our serializers
@@ -36,16 +37,16 @@ class CreateQuizView(APIView):
     authentication_classes = [CookieJWTAuthentication] # use cookie-based JWT
     permission_classes = [IsAuthenticated] # require a valid user
 
-    def post(self, request): # handle POST requests
-        serializer = QuizCreateSerializer(data=request.data) # parse input
-        if not serializer.is_valid(): # validate basic schema/URL
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) # 400 on input errors
-        url = serializer.validated_data['url'] # safe YouTube URL
+    def post(self, request):
+        serializer = QuizCreateSerializer(data=request.data)  # parse input
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        url = serializer.validated_data['url']  # safe YouTube URL
 
-        # If a quiz for this video already exists, return it (idempotent behavior is handy)
-        existing = Quiz.objects.filter(video_url=url).first() # try to reuse
-        if existing: # if found
-            return Response(QuizSerializer(existing).data, status=status.HTTP_200_OK) # return cached quiz
+        # IMPORTANT: reuse only if the same user already created this quiz for the same video
+        existing = Quiz.objects.filter(user=request.user, video_url=url).first()
+        if existing:
+            return Response(QuizSerializer(existing).data, status=status.HTTP_200_OK)
 
         try:
             # Work directory for temp artifacts
@@ -63,21 +64,23 @@ class CreateQuizView(APIView):
                 quiz_payload = pipeline.generate_quiz_with_gemini(transcript) # returns dict structure
 
                 # 4) Persist models
-                quiz = Quiz.objects.create( # create the quiz row
-                    title=quiz_payload.get('title', 'Quiz'), # title from AI
-                    description=quiz_payload.get('description', ''), # description from AI
-                    video_url=url, # original YouTube link
+                # NEW: attach quiz to the authenticated user
+                quiz = Quiz.objects.create(
+                    user=request.user,  # <— owner set
+                    title=quiz_payload.get('title', 'Quiz'),
+                    description=quiz_payload.get('description', ''),
+                    video_url=url,
                 )
 
                 # create all questions in bulk for efficiency
                 question_objs = [] # build a list to bulk_create
                 for item in quiz_payload['questions']: # iterate 10 entries
                     question_objs.append(
-                    Question(
-                    quiz=quiz, # FK
-                    question_title=item['question_title'], # prompt text
-                    question_options=item['options'], # list[str]
-                    answer=item['answer'], # correct option
+                        Question(
+                        quiz=quiz, # FK
+                        question_title=item['question_title'], # prompt text
+                        question_options=item['options'], # list[str]
+                        answer=item['answer'], # correct option
                 )
                 )
                 Question.objects.bulk_create(question_objs) # insert in one query
@@ -94,3 +97,27 @@ class CreateQuizView(APIView):
         except Exception: # unknown/unexpected errors
             return Response({'detail': 'Internal server error.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) # generic 500
           
+
+class QuizListView(ListAPIView):
+    """
+    GET /api/quizzes/
+    Returns all quizzes of the authenticated user, including nested questions.
+    Authentication:
+      - JWT via HttpOnly cookie (see CookieJWTAuthentication above).
+    Responses:
+      - 200: List of quizzes (may be empty).
+      - 401: Not authenticated.
+      - 500: Unexpected server error.
+    """
+    authentication_classes = [CookieJWTAuthentication]  # read JWT from cookie
+    permission_classes = [IsAuthenticated]              # require logged-in user
+    serializer_class = QuizSerializer                   # nested questions included
+
+    def get_queryset(self):
+        """
+        Return only the quizzes owned by the current user.
+
+        We rely on the new user foreign key on Quiz and default ordering (newest first).
+        """
+        # self.request.user is guaranteed by IsAuthenticated
+        return Quiz.objects.filter(user=self.request.user).prefetch_related('questions')
