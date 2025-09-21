@@ -101,7 +101,7 @@ pytest.ini
 .coveragerc.ini
 
 # **/tests/
-main_app/tests/*
+main_app/api/tests/
 *.ini
 **/media/
 **/management/
