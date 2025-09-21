@@ -99,16 +99,22 @@ class QuizPartialUpdateSerializer(serializers.ModelSerializer):
 
     def validate_title(self, value: str) -> str:
         """
-        Basic sanity validation for 'title' length.
+        Ensure provided 'title' is non-empty after trimming and within length limits.
         """
-        # Ensure we handle None gracefully (field may be omitted)
+        # Allow omission in PATCH (None means field not provided)
         if value is None:
-            return value  # nothing to validate when omitted
-        # Strip whitespace to avoid accidental blank titles
-        value = value.strip()
+            return value  # nothing to validate if omitted
+
+        # Normalize whitespace
+        value = value.strip()  # remove leading/trailing spaces
+
+        # Empty after trimming → reject
         if not value:
             raise serializers.ValidationError('Title must not be empty when provided.')
-        # Keep length within model's CharField capacity
+
+        # Guard against overly long titles (match your CharField length)
         if len(value) > 255:
             raise serializers.ValidationError('Title must be at most 255 characters.')
+
+        # Return the cleaned value
         return value
