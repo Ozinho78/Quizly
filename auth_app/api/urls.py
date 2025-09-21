@@ -8,3 +8,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='api-logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='api-token-refresh'),
 ]
+
+
+from auth_app.api.views import MeView
+urlpatterns += [ path('me/', MeView.as_view(), name='api-me') ]

@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-wr7nuq$nkp)br90q%%j7i2b6n^6hz=07&&)u0u83t=_ok^2j$t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -56,7 +56,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'core.utils.authentication.CookieJWTAuthentication',
     ),
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     'EXCEPTION_HANDLER': 'core.utils.exceptions.exception_handler_status500',
@@ -69,11 +70,11 @@ SIMPLE_JWT = {
 }
 
 # --- Cookie-Flags für JWT (kannst du zentral steuern) ---
-# JWT_COOKIE_SECURE = True          # in DEV evtl. False, in PROD unbedingt True
-JWT_COOKIE_SECURE = False           # für localhost um Cookies zu sehen
-JWT_COOKIE_SAMESITE = 'None'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
-JWT_ACCESS_COOKIE_NAME = 'access_token'
-JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+# # JWT_COOKIE_SECURE = True          # in DEV evtl. False, in PROD unbedingt True
+# JWT_COOKIE_SECURE = False           # für localhost um Cookies zu sehen
+# JWT_COOKIE_SAMESITE = 'None'       # 'Lax' ist sinnvoll; bei Cross-Site-Frontend ggf. 'None' + Secure
+# JWT_ACCESS_COOKIE_NAME = 'access_token'
+# JWT_REFRESH_COOKIE_NAME = 'refresh_token'
 
 
 MIDDLEWARE = [
@@ -82,6 +83,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'core.utils.middleware.CookieToAuthorizationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -208,26 +210,46 @@ LOGGING = {
 }
 
 
+# CSRF_TRUSTED_ORIGINS = [
+#     'http://127.0.0.1:5500',
+#     'http://localhost:5500',
+# ]
+
+
+# # CORS
+# CORS_ALLOW_ALL_ORIGINS = False
+# CORS_ALLOWED_ORIGINS = [
+#     'http://127.0.0.1:5500',
+#     'http://localhost:5500',
+#     # 'http://127.0.0.1:8000',   # optional
+#     # 'http://localhost:8000',   # optional
+# ]
+# CORS_ALLOW_CREDENTIALS = True
+# # (Optional) Falls du spezielle Header brauchst:
+# # CORS_ALLOW_HEADERS = list(default_headers) + ['X-CSRFToken']
+# # CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+
+# CSRF_COOKIE_SAMESITE = 'None'
+# CSRF_COOKIE_SECURE = False
+# SESSION_COOKIE_SAMESITE = 'None'
+# SESSION_COOKIE_SECURE = False
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+# CORS nur für dein Frontend erlauben + Credentials an
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF-Trusted (für Cookies + POSTs)
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5500',
     'http://localhost:5500',
 ]
 
-
-# CORS
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:5500',
-    'http://localhost:5500',
-    'http://127.0.0.1:8000',   # optional
-    'http://localhost:8000',   # optional
-]
-CORS_ALLOW_CREDENTIALS = True
-# (Optional) Falls du spezielle Header brauchst:
-# CORS_ALLOW_HEADERS = list(default_headers) + ['X-CSRFToken']
-# CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = False
+# Cookies cross-site erlauben
+JWT_COOKIE_SAMESITE = 'Lax'   # <- war 'Lax'
+JWT_COOKIE_SECURE = False      # lokal ohne HTTPS (in Prod: True)

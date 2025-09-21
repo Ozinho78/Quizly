@@ -3,7 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ValidationError
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView # DRF base API view
 from rest_framework.request import Request
 from rest_framework.response import Response # DRF HTTP response wrapper
@@ -296,3 +296,15 @@ class TokenRefreshView(APIView):
         except Exception:
             # Any unexpected error becomes a 500 per your spec (you also have a global handler set).
             return Response({'detail': 'Internal server error.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
+class MeView(APIView):
+    """
+    Returns minimal info about the authenticated user.
+    Requires CookieJWTAuthentication (configured globally).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        u = request.user
+        return Response({'id': u.id, 'username': u.username, 'email': u.email}, status=200)
