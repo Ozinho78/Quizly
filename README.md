@@ -95,7 +95,7 @@ python manage.py createsuperuser
 ```
 
 
-### 6. Run the server
+### 7. Run the server
 ``` bash
 python manage.py runserver
 ```
