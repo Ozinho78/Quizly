@@ -75,10 +75,10 @@ pip install -r requirements.txt
 # Django secret key
 DJANGO_SECRET_KEY=your-own-very-secret-key
 
-# Debug mode (True/False)
+# Debug mode
 DJANGO_DEBUG=True
 
-# Gemini API key (required for quiz generation)
+# Gemini API key
 GEMINI_API_KEY=your-own-gemini-api-key
 ```
 
