@@ -70,13 +70,26 @@ pip install -r requirements.txt
 ```
 
 
-### 4. Run database migrations
+### 4. Create your .env file in base directory
+```bash
+# Django secret key
+DJANGO_SECRET_KEY=your-own-very-secret-key
+
+# Debug mode (True/False)
+DJANGO_DEBUG=True
+
+# Gemini API key (required for quiz generation)
+GEMINI_API_KEY=your-own-gemini-api-key
+```
+
+
+### 5. Run database migrations
 ```bash
 python manage.py migrate
 ```
 
 
-### 5. Creating a superuser
+### 6. Creating a superuser
 ```bash
 python manage.py createsuperuser
 ```
